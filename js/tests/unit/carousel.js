@@ -4,17 +4,15 @@ $(function () {
   window.Carousel = typeof bootstrap !== 'undefined' ? bootstrap.Carousel : Carousel
 
   var originWinPointerEvent = window.PointerEvent
-  var originMsPointerEvent = window.MSPointerEvent
+  window.MSPointerEvent = null
   var supportPointerEvent = Boolean(window.PointerEvent || window.MSPointerEvent)
 
   function clearPointerEvents() {
     window.PointerEvent = null
-    window.MSPointerEvent = null
   }
 
   function restorePointerEvents() {
     window.PointerEvent = originWinPointerEvent
-    window.MSPointerEvent = originMsPointerEvent
   }
 
   var stylesCarousel = [
@@ -1032,11 +1030,15 @@ $(function () {
       return
     }
 
+    var sandbox = sinon.createSandbox()
+    if ('maxTouchPoints' in navigator) {
+      sandbox.stub(navigator, 'maxTouchPoints').value(1)
+    }
+
     Simulator.setType('pointer')
     assert.expect(3)
     var $styles = $(stylesCarousel).appendTo('head')
     var done = assert.async()
-    document.documentElement.ontouchstart = $.noop
 
     var carouselHTML =
         '<div class="carousel" data-interval="false">' +
@@ -1050,8 +1052,7 @@ $(function () {
         '  </div>' +
         '</div>'
 
-    var $carousel = $(carouselHTML)
-    $carousel.appendTo('#qunit-fixture')
+    var $carousel = $(carouselHTML).appendTo('#qunit-fixture')
     var $item = $('#item')
     $carousel.bootstrapCarousel()
     var carousel = $carousel.data('bs.carousel')
@@ -1061,8 +1062,8 @@ $(function () {
       assert.ok(true, 'slid event fired')
       assert.ok($item.hasClass('active'))
       assert.ok(spy.called)
-      delete document.documentElement.ontouchstart
       $styles.remove()
+      sandbox.restore()
       done()
     })
 
@@ -1075,6 +1076,12 @@ $(function () {
   QUnit.test('should allow swiperight and call prev with touch events', function (assert) {
     Simulator.setType('touch')
     clearPointerEvents()
+
+    var sandbox = sinon.createSandbox()
+    if ('maxTouchPoints' in navigator) {
+      sandbox.stub(navigator, 'maxTouchPoints').value(1)
+    }
+
     assert.expect(3)
     var done = assert.async()
     document.documentElement.ontouchstart = $.noop
@@ -1104,6 +1111,7 @@ $(function () {
       assert.ok(spy.called)
       delete document.documentElement.ontouchstart
       restorePointerEvents()
+      sandbox.restore()
       done()
     })
 
@@ -1119,12 +1127,16 @@ $(function () {
       return
     }
 
+    var sandbox = sinon.createSandbox()
+    if ('maxTouchPoints' in navigator) {
+      sandbox.stub(navigator, 'maxTouchPoints').value(1)
+    }
+
     assert.expect(3)
     Simulator.setType('pointer')
 
     var $styles = $(stylesCarousel).appendTo('head')
     var done = assert.async()
-    document.documentElement.ontouchstart = $.noop
 
     var carouselHTML =
         '<div class="carousel" data-interval="false">' +
@@ -1150,6 +1162,7 @@ $(function () {
       assert.ok(!$item.hasClass('active'))
       assert.ok(spy.called)
       $styles.remove()
+      sandbox.restore()
       done()
     })
 
@@ -1164,6 +1177,11 @@ $(function () {
     assert.expect(3)
     clearPointerEvents()
     Simulator.setType('touch')
+
+    var sandbox = sinon.createSandbox()
+    if ('maxTouchPoints' in navigator) {
+      sandbox.stub(navigator, 'maxTouchPoints').value(1)
+    }
 
     var done = assert.async()
     document.documentElement.ontouchstart = $.noop
@@ -1192,6 +1210,7 @@ $(function () {
       assert.ok(!$item.hasClass('active'))
       assert.ok(spy.called)
       restorePointerEvents()
+      sandbox.restore()
       done()
     })
 
@@ -1205,6 +1224,12 @@ $(function () {
   QUnit.test('should not allow pinch with touch events', function (assert) {
     assert.expect(0)
     clearPointerEvents()
+
+    var sandbox = sinon.createSandbox()
+    if ('maxTouchPoints' in navigator) {
+      sandbox.stub(navigator, 'maxTouchPoints').value(1)
+    }
+
     Simulator.setType('touch')
     var done = assert.async()
     document.documentElement.ontouchstart = $.noop
@@ -1221,6 +1246,7 @@ $(function () {
       touches: 2
     }, function () {
       restorePointerEvents()
+      sandbox.restore()
       done()
     })
   })
